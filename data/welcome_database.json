@@ -1,0 +1,17 @@
+{
+  "groups": {
+    "120363422154916586@g.us": {
+      "welcomeMessage": {
+        "text": "ᯓ★Welcome To Astral Serenity★ᯓ\n\n╰┈➤INTRODUCTION\n╭﹕‹𝟹﹕Nama : \n | ﹕‹𝟹﹕Ar : \n | ﹕‹𝟹﹕Uid (ga wajib) : \n | ﹕‹𝟹﹕Main char : \n╰﹕‹𝟹﹕Girl/Boy\n\nHi {user}!, We hope kalian betah yaa! 🤍 if you need something, just tag the admin, don't be shy :3\n\n> Kalo maw, klean bisa save uid kalian dengan cara ketik \".uid <uid kalian>\" (tanpa tanda \" dan <>) ya, \n> contoh: .uid 123456789",
+        "media": {
+          "type": "video",
+          "path": "/home/syamsudin/bot/data/welcome_media/1766231026686_dvyqgrwv9.mp4",
+          "filename": "1766231026686_dvyqgrwv9.mp4",
+          "size": 437568,
+          "mimetype": "video/mp4",
+          "extension": "mp4"
+        }
+      }
+    }
+  }
+}
