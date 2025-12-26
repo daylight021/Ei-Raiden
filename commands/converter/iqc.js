@@ -23,8 +23,8 @@ module.exports = {
         txt,
         chatTime = '11:02',
         statusBarTime = '17:01',
-        bubbleColorInput = '#00ffff',
-        menuColor = '#000000',
+        bubbleColorInput = '#363638',
+        menuColor = '#ffffff',
         textColorInput = '#ffffff',
         fontName = 'vitaal',
         signalName = 'Telkomsel'
@@ -38,7 +38,7 @@ module.exports = {
 
       // --- LOGIKA WARNA & KONTRAS (Dipertahankan dari kode asli) ---
       const normColor = c => (c && typeof c === 'string' && c.startsWith('#')) ? c : (c ? `#${c.replace(/^#+/, '')}` : c);
-      const bubble = normColor(bubbleColorInput || '#00ffff');
+      const bubble = normColor(bubbleColorInput || '#363638');
       let textColor = normColor(textColorInput || '#ffffff');
 
       const hexToRgb = (hex) => {
