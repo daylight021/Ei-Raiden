@@ -24,7 +24,7 @@ module.exports = {
         chatTime = '11:02',
         statusBarTime = '17:01',
         bubbleColorInput = '#363638',
-        menuColor = '#ffffff',
+        menuColor = '#363638',
         textColorInput = '#ffffff',
         fontName = 'vitaal',
         signalName = 'Telkomsel'
@@ -105,7 +105,7 @@ module.exports = {
       
       await bot.sendMessage(msg.from, { 
         image: Buffer.from(buffer), 
-        caption: 'Done ya kak! ✨\nCreator: Anabot' 
+        caption: 'Done ya kak!' 
       }, { quoted: msg });
 
       await msg.react("✅");
