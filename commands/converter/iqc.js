@@ -24,7 +24,7 @@ module.exports = {
         chatTime = '11:02',
         statusBarTime = '17:01',
         bubbleColorInput = '#363638',
-        menuColor = '#363638',
+        menuColor = '#212123ff',
         textColorInput = '#ffffff',
         fontName = 'vitaal',
         signalName = 'Telkomsel'
@@ -117,3 +117,4 @@ module.exports = {
     }
   },
 };
+
