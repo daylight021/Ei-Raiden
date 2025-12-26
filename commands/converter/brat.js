@@ -1,11 +1,8 @@
-// file: commands/sticker/brat.js
-
 const { Sticker, StickerTypes } = require('wa-sticker-formatter');
 
 module.exports = {
   name: "brat",
   alias: ["bratsticker", "sbrat"],
-  category: "sticker",
   description: "Membuat stiker teks gaya brat (Max 30 karakter).",
   execute: async (msg, { bot, usedPrefix }) => {
     try {
@@ -17,12 +14,6 @@ module.exports = {
       if (!text) {
         return await bot.sendMessage(msg.from, { 
           text: `Gunakan format:\n${usedPrefix}brat <teks>\n\nContoh:\n${usedPrefix}brat siapa yang bikin onar` 
-        }, { quoted: msg });
-      }
-
-      if (text.length > 30) {
-        return await bot.sendMessage(msg.from, { 
-          text: '⚠️ Teks terlalu panjang! Maksimal 30 karakter.' 
         }, { quoted: msg });
       }
 
