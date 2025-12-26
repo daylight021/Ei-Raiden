@@ -1,12 +1,17 @@
+const { createSticker } = require("../../lib/sticker-helper"); 
+
 module.exports = {
   name: "bratvid",
-  alias: ["bratgif", "vbrat"],
-  description: "Membuat animasi video/GIF teks gaya brat.",
+  alias: ["bratgif", "vbrat", "sbratvid"],
+  description: "Membuat stiker animasi (GIF) teks gaya brat.",
   execute: async (msg, { bot, usedPrefix }) => {
     try {
       // 1. Ekstrak text
+      // Menghapus command prefix + nama command, lalu trim
       const body = msg.body || msg.text || (msg.message && (msg.message.conversation || msg.message.extendedTextMessage?.text)) || "";
-      const text = body.slice(usedPrefix.length + 7).trim(); // +7 untuk "bratvid"
+      // Sesuaikan panjang slice dengan panjang command terpanjang atau split manual
+      const args = body.trim().split(/\s+/);
+      const text = body.slice(args[0].length).trim(); 
 
       if (!text) {
         return await bot.sendMessage(msg.from, { 
@@ -49,15 +54,35 @@ module.exports = {
         return msg.reply('❌ Gagal mengunduh data video.');
       }
 
-      // 5. Kirim Video (Buffer)
-      // Menggunakan Buffer lebih stabil daripada URL
-      await bot.sendMessage(msg.from, { 
-        video: Buffer.from(buffer), 
-        caption: `Brat Video: ${text}`,
-        gifPlayback: true // Agar loop otomatis tanpa suara
-      }, { quoted: msg });
+      // 5. Konversi ke Stiker menggunakan sticker-helper
+      console.log("Mengonversi brat video ke stiker...");
+      
+      try {
+        const stickerBuffer = Buffer.from(buffer);
+        
+        // Gunakan createSticker dari helper kamu
+        // Helper ini otomatis mengompres video agar muat jadi stiker WA (< 1MB)
+        const sticker = await createSticker(stickerBuffer, {
+            pack: "Brat Vid",
+            author: "By Bot"
+        });
 
-      await msg.react("✅");
+        // Helper kamu mengembalikan objek yang memiliki method toMessage()
+        const stickerMessage = await sticker.toMessage();
+
+        // 6. Kirim Stiker
+        await bot.sendMessage(msg.from, stickerMessage, { quoted: msg });
+        await msg.react("✅");
+
+      } catch (conversionError) {
+        console.error("Gagal convert ke stiker:", conversionError);
+        // Fallback: Jika gagal jadi stiker, kirim sebagai video biasa
+        await bot.sendMessage(msg.from, { 
+            video: Buffer.from(buffer), 
+            caption: "⚠️ Gagal konversi ke stiker (file terlalu berat), mengirim sebagai video.",
+            gifPlayback: true
+        }, { quoted: msg });
+      }
 
     } catch (e) {
       console.error(e);
