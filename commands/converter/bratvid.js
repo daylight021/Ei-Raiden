@@ -4,62 +4,57 @@ module.exports = {
   description: "Membuat animasi video/GIF teks gaya brat.",
   execute: async (msg, { bot, usedPrefix }) => {
     try {
-      // 1. Ekstrak text dari pesan
+      // 1. Ekstrak text
       const body = msg.body || msg.text || (msg.message && (msg.message.conversation || msg.message.extendedTextMessage?.text)) || "";
-      const text = body.slice(usedPrefix.length + 7).trim(); // +7 untuk panjang "bratvid"
+      const text = body.slice(usedPrefix.length + 7).trim(); // +7 untuk "bratvid"
 
-      // 2. Validasi Input
       if (!text) {
         return await bot.sendMessage(msg.from, { 
-          text: `Gunakan format:\n${usedPrefix}bratvid <teks>\n\nContoh:\n${usedPrefix}bratvid goyang dumang` 
+          text: `Gunakan format:\n${usedPrefix}bratvid <teks>\n\nContoh:\n${usedPrefix}bratvid siapa suruh datang` 
         }, { quoted: msg });
       }
 
-      if (text.length > 100) {
-        return await bot.sendMessage(msg.from, { 
-          text: '⚠️ Teks terlalu panjang! Maksimal 100 karakter.' 
-        }, { quoted: msg });
-      }
+      if (text.length > 100) return msg.reply('⚠️ Teks terlalu panjang! Maksimal 100 karakter.');
 
-      // 3. Reaksi Loading
       await msg.react("⏳");
 
-      // 4. Konfigurasi API
-      const API_KEY = '1NhvxjupkX'; 
+      // 2. Request ke API
+      const API_KEY = '1NhvxjupkX';
       const apiUrl = `https://anabot.my.id/api/maker/bratGif?text=${encodeURIComponent(text)}&apikey=${encodeURIComponent(API_KEY)}`;
-
-      // 5. Fetch API Utama
+      
       const response = await fetch(apiUrl);
       const contentType = response.headers.get('content-type');
 
-      // Variabel untuk menyimpan URL akhir media
-      let mediaUrl = '';
+      let buffer;
 
-      // Skenario A: API Mengembalikan JSON (berisi URL media)
+      // 3. Penanganan Respons (JSON vs Raw Video)
       if (contentType && contentType.includes('application/json')) {
+        // Skenario A: API memberikan JSON berisi URL
         const json = await response.json();
         if (!json.status || !json.data || !json.data.url) {
           await msg.react("❌");
-          return await bot.sendMessage(msg.from, { text: '❌ Gagal membuat brat video (API Error).' }, { quoted: msg });
+          return msg.reply('❌ Gagal membuat video (API Error/Limit).');
         }
-        mediaUrl = json.data.url;
-      } 
-      // Skenario B: API Mengembalikan File Langsung (Jaga-jaga)
-      else if (contentType && (contentType.includes('video') || contentType.includes('image'))) {
-          // Jika langsung file, kita bisa pakai url API langsung atau buffer
-          // Namun API ini biasanya mereturn JSON dulu
+        // Download video dari URL yang diberikan JSON
+        const videoResponse = await fetch(json.data.url);
+        buffer = await videoResponse.arrayBuffer();
+      } else {
+        // Skenario B: API langsung memberikan file video (Raw Buffer)
+        buffer = await response.arrayBuffer();
       }
 
-      if (!mediaUrl) {
-         return await bot.sendMessage(msg.from, { text: '❌ Tidak dapat menemukan URL media.' }, { quoted: msg });
+      // 4. Validasi Buffer
+      if (!buffer || buffer.byteLength === 0) {
+        await msg.react("❌");
+        return msg.reply('❌ Gagal mengunduh data video.');
       }
 
-      // 6. Kirim Video
-      // Kita kirim sebagai video dengan opsi gifPlayback: true agar loop otomatis di WA
+      // 5. Kirim Video (Buffer)
+      // Menggunakan Buffer lebih stabil daripada URL
       await bot.sendMessage(msg.from, { 
-        video: { url: mediaUrl }, 
+        video: Buffer.from(buffer), 
         caption: `Brat Video: ${text}`,
-        gifPlayback: true // Ini membuat video diputar otomatis tanpa suara (seperti GIF)
+        gifPlayback: true // Agar loop otomatis tanpa suara
       }, { quoted: msg });
 
       await msg.react("✅");
