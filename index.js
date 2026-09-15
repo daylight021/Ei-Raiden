@@ -5,7 +5,7 @@ const Collection = require("./lib/CommandCollections");
 const fs = require("fs");
 const path = require("node:path");
 const chokidar = require("chokidar");
-const qrcode = require('qrcode-terminal');
+const readline = require("readline");
 const {
   default: makeWASocket,
   DisconnectReason,
@@ -41,6 +41,20 @@ process.on("uncaughtException", console.error);
 // Global restart attempt counter
 let restartAttempts = 0;
 
+// Helper to prompt user input from terminal
+function promptInput(question) {
+  const rl = readline.createInterface({
+    input: process.stdin,
+    output: process.stdout,
+  });
+  return new Promise((resolve) => {
+    rl.question(question, (answer) => {
+      rl.close();
+      resolve(answer.trim());
+    });
+  });
+}
+
 async function start() {
   // Client configuration
   const { state, saveCreds } = await useMultiFileAuthState("sessions");
@@ -48,12 +62,6 @@ async function start() {
 
   // Client store
   const store = createCustomStore({ logger: Pino({ level: "silent" }) });
-  // // can be read from a file
-  // store.readFromFile("./client_store.json");
-  // // saves the state to a file every 1minute
-  // setInterval(() => {
-  //   store.writeToFile("./client_store.json");
-  // }, 60_000);
 
   // Deploy the client
   const bot = makeWASocket({
@@ -226,18 +234,48 @@ async function start() {
   }
 
   let connectionTimer;
+  let pairingCodeRequested = false;
+
+  // Request pairing code if not registered
+  if (!bot.authState.creds.registered) {
+    setTimeout(async () => {
+      try {
+        const phoneNumber = await promptInput('📱 Masukkan nomor WhatsApp bot (contoh: 6281234567890): ');
+
+        if (!phoneNumber || !/^\d+$/.test(phoneNumber)) {
+          console.error('❌ Nomor tidak valid. Harus berupa angka tanpa spasi, tanda +, atau tanda hubung.');
+          process.exit(1);
+        }
+
+        console.log(`\n⏳ Meminta pairing code untuk nomor: ${phoneNumber}...\n`);
+
+        const code = await bot.requestPairingCode(phoneNumber);
+        const formattedCode = code?.match(/.{1,4}/g)?.join('-') || code;
+
+        console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+        console.log('🔑 PAIRING CODE ANDA:');
+        console.log(`\n        ${formattedCode}\n`);
+        console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+        console.log('📌 Cara menggunakan:');
+        console.log('   1. Buka WhatsApp di HP Anda');
+        console.log('   2. Buka Pengaturan → Perangkat Tertaut');
+        console.log('   3. Ketuk "Tautkan Perangkat"');
+        console.log('   4. Pilih "Tautkan dengan nomor telepon saja"');
+        console.log('   5. Masukkan pairing code di atas');
+        console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
+
+        pairingCodeRequested = true;
+      } catch (error) {
+        console.error('❌ Gagal meminta pairing code:', error);
+        process.exit(1);
+      }
+    }, 3000);
+  }
 
   bot.ev.on("connection.update", async (update) => {
-    const { connection, lastDisconnect, qr } = update;
+    const { connection, lastDisconnect } = update;
     console.log("connection update", update); // Enhanced logging
-    if (qr) {
-      console.log('------------------------------------------------');
-      console.log('📱 Pindai QR Code di bawah ini untuk terhubung:');
-      qrcode.generate(qr, { small: true });
-      const qrLink = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(qr)}`;
-      console.log('\n Atau, jika QR di atas berantakan, buka link ini:\n', qrLink);
-      console.log('------------------------------------------------');
-    }
+
     if (connection === "close") {
       console.log("connection closed");
       if (connectionTimer) {
